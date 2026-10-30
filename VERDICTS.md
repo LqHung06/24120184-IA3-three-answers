@@ -88,3 +88,55 @@
   with `Promise.all` (line 54).
 - Tentative verdict: keep, subject to the runs confirming it.
   To be confirmed by running.
+
+---
+
+## Results before fixes (run against server.mjs under all 5 test conditions)
+
+### Version A
+- Prediction check: My prediction was confirmed. Version A failed Row 2 because `forEach` did not wait for stock requests before writing the stock value.
+- Row 1: PASS. Under `normal` mode, 8 cards rendered in API order, prices formatted like `180.000 đ`, status line cleared.
+- Row 2: FAIL. Under `normal` mode, `Stock value:` displays `0 đ` instead of expected `12.360.000 đ` (evidence: `evidence/a-row2.png`).
+- Row 3: PASS. Scarf name reads `Scarf <i>limited</i>` with literal angle brackets visible and text not in italics.
+- Row 4: PASS. Under `slow` mode, `Loading products…` shown for about 3.00 s (server log: `3003 ms`), then 8 cards appeared and status cleared.
+- Row 5: PASS. Under `error` mode, shows `Could not load products.` and Retry button is visible with list cleared; switching to `normal` and clicking Retry reloads 8 cards and clears error message and button.
+- Row 6: PASS. Under `hang` mode, browser aborted request after 5.00 s (server log: `the browser gave up after 5006 ms`), status shows `Could not load products.` and Retry is shown.
+- Row 7: PASS. Console remained completely free of `Uncaught …` errors throughout rows 1–6 (only browser's own red `GET … 500` under error mode).
+- Row 8: PASS. Opened folder in VS Code, added `// @ts-check` at line 1 of `a.js`: 0 red squiggly lines (0 problems). Line removed immediately afterwards.
+- Row empty: PASS. Under `empty` mode, status displays `No products yet.`, `Stock value:` displays `0 đ`, catalogue is empty.
+- Row Parallel: PASS. Under `normal` mode, all 8 `/api/stock/…` requests started at the exact same timestamp (~60 ms on Network waterfall, no staircase).
+- Code responsible: `public/versions/a.js`, lines 52–56 (`products.forEach(async (p) => { ... })` does not await async callbacks before executing `stockValue.textContent = formatVnd(total)` at line 56).
+- Verdict: **fix** (decided by Row 2).
+- One sentence to assistant: *"Row 2 (normal): stock value shows `0 đ` instead of `12.360.000 đ` because `products.forEach(async ...)` does not await before writing `#stock-value`; await all stock requests using `Promise.all` keeping them in parallel (do not use `await` inside a `for` loop), then write the formatted total; preserve `AbortSignal.timeout(5000)`, `textContent`, and touch no other file."*
+
+### Version B
+- Prediction check: My prediction was confirmed. Version B failed Row 6 because `{ timeout: 5000 }` was silently ignored, and failed Row 8 because TypeScript flagged `timeout` as an invalid option.
+- Row 1: PASS. Under `normal` mode, 8 cards rendered in API order, prices formatted like `180.000 đ`, status line cleared.
+- Row 2: PASS. Under `normal` mode, `Stock value:` correctly displays `12.360.000 đ` after stock requests complete via `Promise.all`.
+- Row 3: PASS. Scarf name reads `Scarf <i>limited</i>` with literal angle brackets visible and text not in italics.
+- Row 4: PASS. Under `slow` mode, `Loading products…` shown for 3.00 s (server log: `3000 ms`), then 8 cards appeared and status cleared.
+- Row 5: PASS. Under `error` mode, shows `Could not load products.` and Retry button is visible; switching to `normal` and clicking Retry reloads 8 cards.
+- Row 6: FAIL. Under `hang` mode, `/api/products` hung for 30.02 s (server log: `30011 ms` and `30016 ms` before 504), failing to give up after 5 seconds because `{ timeout: 5000 }` is not a valid fetch option in browser Web API (evidence: `evidence/b-row6.png`).
+- Row 7: PASS. Console remained free of `Uncaught …` errors throughout rows 1–6 (only browser's own red `GET … 504`/`500` network status).
+- Row 8: FAIL. Opened folder in VS Code, added `// @ts-check` at line 1 of `b.js`: red squiggly line under `{ timeout: 5000 }` at line 17 with error `Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'` (evidence: `evidence/b-row8.png`). Line removed immediately afterwards.
+- Row empty: PASS. Under `empty` mode, status displays `No products yet.`, `Stock value:` displays `0 đ`.
+- Row Parallel: PASS. Under `normal` mode, all 8 `/api/stock/…` requests started simultaneously via `Promise.all`.
+- Code responsible: `public/versions/b.js`, line 16 (or line 17 in VS Code: `fetch('/api/products', { timeout: 5000 })` using non-existent `timeout` property instead of `signal: AbortSignal.timeout(5000)`).
+- Verdict: **fix** (decided by Row 6 and Row 8).
+- One sentence to assistant: *"Rows 6 and 8 fail: under `hang` mode `/api/products` hangs for 30 seconds instead of aborting after 5 seconds, and `// @ts-check` reports that `timeout` does not exist in `RequestInit` at line 16; replace `{ timeout: 5000 }` with `{ signal: AbortSignal.timeout(5000) }`; preserve `Promise.all` parallel requests for stock, `res.ok` check, `textContent`, and touch no other file."*
+
+### Version C
+- Prediction check: My prediction was confirmed. Version C passed all rows under all conditions.
+- Row 1: PASS. Under `normal` mode, 8 cards rendered in API order, prices formatted like `180.000 đ`, status line cleared.
+- Row 2: PASS. Under `normal` mode, `Stock value:` correctly displays `12.360.000 đ` after stock requests complete via `Promise.all`.
+- Row 3: PASS. Scarf name reads `Scarf <i>limited</i>` with literal angle brackets visible and text not in italics.
+- Row 4: PASS. Under `slow` mode, `Loading products…` shown for about 3.00 s, then 8 cards appeared and status cleared.
+- Row 5: PASS. Under `error` mode, shows `Could not load products.` + Retry; Retry under `normal` reloads 8 cards.
+- Row 6: PASS. Under `hang` mode, the page gave up right at 5.00 s (server log: `the browser gave up after 5015 ms` and `4999 ms`), status shows `Could not load products.` and Retry button appears.
+- Row 7: PASS. Console clean, no `Uncaught …` errors throughout rows 1–6.
+- Row 8: PASS. Added `// @ts-check` at line 1 of `c.js`: 0 red underlines (0 problems). Line removed immediately afterwards.
+- Row empty: PASS. Under `empty` mode, status displays `No products yet.`, `Stock value:` displays `0 đ`.
+- Row Parallel: PASS. All 8 `/api/stock/…` requests start simultaneously via `Promise.all`.
+- Code responsible: None (no failing rows).
+- Verdict: **keep** (passes rows 1–8, empty, and parallel check).
+- One sentence to assistant: *"No fixes required: passes rows 1–8, empty, and parallel check. Keep untouched."*
