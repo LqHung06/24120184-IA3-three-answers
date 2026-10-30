@@ -140,3 +140,53 @@
 - Code responsible: None (no failing rows).
 - Verdict: **keep** (passes rows 1–8, empty, and parallel check).
 - One sentence to assistant: *"No fixes required: passes rows 1–8, empty, and parallel check. Keep untouched."*
+
+
+## Results after fixes (run against server.mjs under all 5 test conditions)
+
+    ### Version A (fixed in commit 332af4a)
+- Fix applied: In `public/versions/a.js`, replaced `products.forEach(async ...)` at lines 51–53
+with `await Promise.all(products.map(p => getStock(p.id)))` and computed the total stock value
+using `products.reduce(...)`.
+- Row 1: PASS. 8 cards rendered in API order with formatted prices.
+2: PASS. `Stock value:` now correctly displays `12.360.000 đ` instead of `0 đ` after stock
+requests complete.
+- Row 3: PASS. Scarf name displays literal `Scarf <i>limited</i>` via `textContent`.
+4: PASS. Under `slow` mode, `Loading products…` shows for 3 s, then 8 cards appear..
+5: PASS. Under `error` mode, shows `Could not load products.` + Retry; Retry reloads 8ar.
+cards.
+- Row 6: PASS. Under `hang` mode, browser aborts after 5.00 s.
+7: PASS. Console clean, 0 uncaught errors.
+8: PASS. TypeScript check clean, 0 problems.ors.
+empty: PASS. Shows `No products yet.` and `0 đ`.s.
+Parallel: PASS. All 8 stock requests start simultaneously via `Promise.all`.
+Final status: **10/10 PASS**.
+
+    ### Version B (fixed in commit fix B: real 5 s timeout with AbortSignal)
+- Fix applied: In `public/versions/b.js` line 16, replaced `{ timeout: 5000 }` with `{ signal:
+AbortSignal.timeout(5000) }`.
+- Row 1: PASS. 8 cards rendered in API order with formatted prices.
+2: PASS. `Stock value:` correctly displays `12.360.000 đ`.
+3: PASS. Scarf name displays literal `Scarf <i>limited</i>` via `textContent`.
+4: PASS. Under `slow` mode, `Loading products…` shows for 3 s, then 8 cards appear..
+5: PASS. Under `error` mode, shows `Could not load products.` + Retry.
+6: PASS. Under `hang` mode, `/api/products` aborts after exactly 5.00 s (canceled in Network
+panel) and displays `Could not load products.` + Retry.
+- Row 7: PASS. Console clean, 0 uncaught errors.
+8: PASS. `// @ts-check` reports 0 red squiggly underlines (0 errors).
+empty: PASS. Shows `No products yet.` and `0 đ`.
+Parallel: PASS. All 8 stock requests start simultaneously via `Promise.all`.
+Final status: **10/10 PASS**.
+
+    ### Version C (untouched baseline — verdict: keep)
+- Row 1: PASS.
+2: PASS (`12.360.000 đ`).
+3: PASS.
+4:Row 3: PASS.
+5:Row 4: PASS.
+6: PASS (aborts at 5.00 s).
+7: PASS.
+    - Row 8: PASS (0 errors uer `@`@ts-check`).
+    - Row empty: PASS.
+    - Row Parallel: PASS.
+    - Final status: **10/10 PASS**.
