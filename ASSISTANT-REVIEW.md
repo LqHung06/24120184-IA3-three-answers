@@ -100,14 +100,19 @@ const response = await fetch('/api/products', { timeout: 5000 });
 
 ## Verification Tables
 
-*(To be filled in Step 8 after running the complete test rows in Step 4 & 5)*
-
 ### Table 1: Assistant Claims vs Actual Runs
-| Assistant Claim | Verified by Row / Run | Result (True / False / Inexact) |
-|---|---|---|
-| *(Pending verification in Step 4 & 5)* | | |
+
+| Assistant Claim | Verified by Row / Run | Result (True / False / Inexact) | Empirical Details |
+|---|---|---|---|
+| **Version A:** `products.forEach(async ...)` does not await stock requests, causing `#stock-value` to synchronously show `0 đ` under `normal` mode. | Row 2 (`normal`) | **True** (Substance) / **Inexact** (Line numbers) | Empirically confirmed: `#stock-value` displayed `0 đ` instead of `12.360.000 đ` (see `evidence/a-row2.png`). Assistant cited lines 48–52, whereas the actual code block in `a.js` was lines 50–56. |
+| **Version A:** Unhandled promise rejections occur if stock requests fail inside `forEach`. | Edge case analysis / Row 7 | **True** (Theoretical) | Under JavaScript event loop semantics, rejected promises inside `forEach` callbacks cannot be caught by outer `try...catch`. In our test suite, stock endpoints succeeded under `normal` mode so Row 7 passed. |
+| **Version B:** `{ timeout: 5000 }` is not a standard browser Web API `fetch` option; page hangs indefinitely under `hang` mode and fails to abort at 5 seconds. | Row 6 (`hang`) | **True** (Substance) / **Inexact** (Line numbers) | Empirically confirmed: `/api/products` hung for 30.02 seconds (server logged `30011 ms` and `30016 ms` before returning 504) instead of aborting at 5.00 seconds (see `evidence/b-row6.png`). Assistant cited line 13 instead of actual line 16. |
+| **Version B:** Catch block fails to clean up DOM cards if stock requests fail after cards are mounted. | Row 5 (`error`) | **False / Inexact** | Under the rubric's `error` condition, `/api/products` itself returns HTTP 500 immediately. Execution jumps to `catch` before `catalogue.append()` is reached, and `catalogue.replaceChildren()` at start of `showCatalogue()` keeps list clean. A stock-only failure is not triggered by standard test conditions. |
+| **Version B:** Calling `catalogue.replaceChildren()` at the start causes unnecessary page flash on Retry. | UI observation on Retry | **Subjective / Non-violation** | Clearing the list at the start of loading is standard practice to prevent stale content during reload. Does not violate any requirement or constraint in `brief.md`. |
+| **Version C:** Version C complies with all 6 brief requirements and all constraints; verdict `keep`. | Rows 1–8, empty, and parallel check | **True** | Empirically confirmed: Version C passed 10 out of 10 checks on the very first run without any modifications needed. |
 
 ### Table 2: Failing Rows Missed by Assistant
-| Failing Row Missed | Evidence |
-|---|---|
-| *(Pending verification in Step 4 & 5)* | | |
+
+| Failing Row Missed | Target Version | What the Assistant Missed | Empirical Evidence |
+|---|---|---|---|
+| **Row 8: TypeScript Check (`// @ts-check`)** | Version B (`b.js`) | The assistant analyzed logical execution and Web API behavior by reading, but completely missed checking the file with VS Code's TypeScript compiler (`// @ts-check` combined with `jsconfig.json`). TypeScript immediately flags line 16 with a red squiggly error because `timeout` is not a property of `RequestInit`. | Red squiggly underline under `{ timeout: 5000 }` at line 16 of `b.js`: `Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'` (captured in `evidence/b-row8.png` and recorded in `VERDICTS.md` Row 8). |
