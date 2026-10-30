@@ -53,3 +53,32 @@
 - **Changed / Rejected**:
   - Rejected any modification outside lines 51–53; rejected changes to error handling, template rendering, or variable naming.
   - Rejected the assistant's initial generated draft of the `## Results after fixes` markdown section due to corrupted text formatting, truncated sentences, and missing row prefixes; subsequently rewrote the section cleanly in commit `5263dbc`.
+
+---
+
+## Entry 3 — Prompting Assistant to Fix Version B (Rows 6 and 8)
+
+- **Tool & Model**: Antigravity (Gemini)
+- **Date**: 2026-10-31
+- **Request**:
+  Provided `brief.md`, `public/versions/b.js`, and the exact one-sentence directive from `VERDICTS.md`:
+  > *"Rows 6 and 8 fail: under `hang` mode `/api/products` hangs for 30 seconds instead of aborting after 5 seconds, and `// @ts-check` reports that `timeout` does not exist in `RequestInit` at line 16; replace `{ timeout: 5000 }` with `{ signal: AbortSignal.timeout(5000) }`; preserve `Promise.all` parallel requests for stock, `res.ok` check, `textContent`, and touch no other file."*
+  Enforced hard rules: only modify line 16 of `public/versions/b.js`, preserve `Promise.all` parallel fetching, and touch no other file.
+- **Result**:
+  The assistant proposed replacing line 16 in `public/versions/b.js`:
+  ```javascript
+  const response = await fetch('/api/products', { signal: AbortSignal.timeout(5000) });
+  ```
+  replacing `{ timeout: 5000 }` with `{ signal: AbortSignal.timeout(5000) }`.
+- **Accepted**:
+  - Applied the exact 1-line diff to line 16 of `public/versions/b.js`.
+  - Verified scope with `git diff --stat`: strictly 1 file changed (1 insertion, 1 deletion).
+  - Reran all test conditions on `?v=b`:
+    - Row 6 (`hang`): `/api/products` aborted after exactly 5.00 s (`(canceled)` in Network tab), displaying `Could not load products.` and showing the Retry button.
+    - Row 8 (`@ts-check`): TypeScript error disappeared; 0 red squiggly underlines.
+    - Row 2 (`normal`) & Parallel: stock value remained `12.360.000 đ`, all 8 stock requests ran concurrently.
+    - Checked Rows 1, 3, 4, 5, 7, empty: confirmed no regression occurred; no other rows were broken.
+  - Committed as `c7c1f61` ("fix B: real 5 s timeout with AbortSignal").
+- **Changed / Rejected**:
+  - Rejected any changes to `public/versions/c.js`, helper functions, or DOM event listeners in `b.js`.
+  - Rejected the commit message placeholder string previously used in documentation headers, enforcing the exact short SHA `c7c1f61` in the final verdict records.
