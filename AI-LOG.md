@@ -24,3 +24,32 @@
 - **Changed / Rejected**:
   - Held off on accepting or rejecting secondary claims (such as the DOM cleanup claim on B, or slightly mismatched line number citations) until empirical verification across all 9 rows in Step 4.
   - Will document a rigorous cross-examination of each claim and any missed rows (such as Row 8 `// @ts-check`) in the verification table in Step 8.
+
+---
+
+## Entry 2 — Prompting Assistant to Fix Version A (Row 2)
+
+- **Tool & Model**: Antigravity (Gemini)
+- **Date**: 2026-10-31
+- **Request**:
+  Provided `brief.md`, `public/versions/a.js`, and the exact one-sentence directive from `VERDICTS.md`:
+  > *"Row 2 (normal): stock value shows `0 đ` instead of `12.360.000 đ` because `products.forEach(async ...)` does not await before writing `#stock-value`; await all stock requests using `Promise.all` keeping them in parallel (do not use `await` inside a `for` loop), then write the formatted total; preserve `AbortSignal.timeout(5000)`, `textContent`, and touch no other file."*
+  Enforced hard rules: only modify `public/versions/a.js`, change only lines 52–56, and do not touch any other files or restructure existing code.
+- **Result**:
+  The assistant proposed replacing lines 51–53 in `public/versions/a.js` with:
+  ```javascript
+  const stocks = await Promise.all(products.map((p) => getStock(p.id)));
+  const total = products.reduce((sum, p, i) => sum + p.price * stocks[i], 0);
+  stockValue.textContent = formatVnd(total);
+  ```
+- **Accepted**:
+  - Applied the minimal diff to lines 51–53 in `public/versions/a.js`.
+  - Verified scope with `git diff --stat`: strictly 1 file changed (2 insertions, 5 deletions).
+  - Reran all test conditions on `?v=a`:
+    - Row 2 (`normal`): stock value correctly updated to `12.360.000 đ`.
+    - Row Parallel: all 8 `/api/stock/...` requests started concurrently at ~190 ms on Network waterfall.
+    - Checked Rows 1, 3, 4, 5, 6, 7, 8, empty: confirmed no regression occurred; no other rows were broken.
+  - Committed as `332af4a` ("fix A: wait for all stock requests before writing the total").
+- **Changed / Rejected**:
+  - Rejected any modification outside lines 51–53; rejected changes to error handling, template rendering, or variable naming.
+  - Rejected the assistant's initial generated draft of the `## Results after fixes` markdown section due to corrupted text formatting, truncated sentences, and missing row prefixes; subsequently rewrote the section cleanly in commit `5263dbc`.
