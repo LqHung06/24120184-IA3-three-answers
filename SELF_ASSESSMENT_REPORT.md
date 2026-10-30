@@ -5,77 +5,68 @@
 - **Branch**: `main` (Public repository)
 - **Course**: CSC13008 — Web Application Development
 - **Session**: Session 5 — "Code That Waits"
-- **Claimed Score**: **100 / 100**
+- **Claimed Total Score**: **100 / 100**
 
 ---
 
-## 1. Executive Summary & Grading Breakdown
+## 1. Rubric Score Table
 
-| Item | Criterion | Max Points | Claimed Points | Evidence / Git Commit |
+*Aligned directly with the 6 criteria defined in the official assignment rubric (`IA3-rubric-three-answers.pdf`).*
+
+| # | Criterion | Max Points | Claimed Points | Primary Evidence / Commits |
 |---|---|---|---|---|
-| **1** | **Predictions before Running** | 10 | 10 | `VERDICTS.md` (Commit `ea1f514`): Detailed predictions for all 3 versions written strictly from reading code prior to executing any script. |
-| **2** | **Independent Assistant Review** | 10 | 10 | `ASSISTANT-REVIEW.md` (Commit `3afee41`): Raw, unedited review in Vietnamese from Gemini 3.8 Flash High, with line citations and initial verdicts. |
-| **3** | **AI Interaction Log (`AI-LOG.md`)** | 10 | 10 | `AI-LOG.md` (Commits `2cc0f80`, `79b72d7`, `fec14aa`): 3 structured entries (Review, Fix A, Fix B) with exact prompts, diffs, table re-run confirmation, and rejected items. |
-| **4** | **Empirical Test Results & Evidence** | 20 | 20 | `VERDICTS.md` (Commit `9fae4c2`) & `evidence/`: 30 verified test rows across all 5 test conditions (`normal`, `slow`, `error`, `hang`, `empty`), console checks, `@ts-check`, parallel checks, with screenshots (`a-row2.png`, `b-row6.png`, `b-row8.png`). |
-| **5** | **Minimal, Correct Fixes (A & B)** | 20 | 20 | `public/versions/a.js` (Commit `332af4a`): Awaited parallel stock requests with `Promise.all` + `reduce`. `public/versions/b.js` (Commit `c7c1f61`): Fixed 5s timeout with `AbortSignal.timeout(5000)`. Version C kept untouched. All 3 versions 10/10 PASS (Commit `5263dbc`). |
-| **6** | **CSR vs SSR Comparative Analysis** | 15 | 15 | `CSR-SSR.md` (Commit `56cfcad`): 5 observation questions answered in English with exact request counts (13–14 vs 2), DOM analysis, XSS escaping comparison (`escapeHtml` vs `textContent`), and single-sentence architectural conclusion. |
-| **7** | **Verification Tables** | 10 | 10 | `ASSISTANT-REVIEW.md`: Table 1 (Assistant Claims vs Actual Runs) evaluating all claims, and Table 2 (Failing Rows Missed) identifying Row 8 (`// @ts-check`). |
-| **8** | **Git Discipline & Repository Hygiene** | 5 | 5 | Clean linear commit history matching the step-by-step workflow, atomic commits with informative messages, no scope creep (`git diff 0de5088 HEAD --stat`), and no leftover `// @ts-check`. |
-| **TOTAL** | | **100** | **100** | |
+| **1** | **Verdicts and evidence — `VERDICTS.md`, `evidence/`** | 30 | 30 | `VERDICTS.md` (Commits `ea1f514`, `9fae4c2`): All 27 rubric rows + 3 parallel rows present with what was seen, responsible code lines, verdicts, and one-sentence prompts. Screenshots in `evidence/`: `a-row2.png`, `b-row6.png`, `b-row8.png`. |
+| **2** | **After your fixes, every version passes every row** | 25 | 25 | `public/versions/a.js` (Commit `332af4a`): Fixed Row 2 via `Promise.all` parallel fetching (`12.360.000 đ`). `public/versions/b.js` (Commit `c7c1f61`): Fixed Rows 6 & 8 with `AbortSignal.timeout(5000)`. `c.js` untouched (`keep`). All 3 versions 10/10 PASS (Commit `5263dbc`). |
+| **3** | **The assistant's review, checked — `ASSISTANT-REVIEW.md`** | 15 | 15 | `ASSISTANT-REVIEW.md` (Commits `3afee41`, `629697d`): Unedited raw Vietnamese review from Gemini 3.8 Flash High; Table 1 checking every claim against actual row runs; Table 2 identifying that the assistant missed Row 8 (`// @ts-check`). |
+| **4** | **CSR vs SSR — `CSR-SSR.md`** | 10 | 10 | `CSR-SSR.md` (Commit `56cfcad`): All 5 questions answered from direct observation: DOM comparison, `escapeHtml` vs `textContent` entity escaping, disabling JS, request counts (13–14 vs 2), and single-sentence architectural rule. |
+| **5** | **`AI-LOG.md`** | 10 | 10 | `AI-LOG.md` (Commits `2cc0f80`, `79b72d7`, `fec14aa`): 3 discrete entries (Step 3 Review, Fix A, Fix B) naming tool/model, exact one-sentence request, code result, confirmation of 0 regressions, and specific rejected items. |
+| **6** | **Scope and commit history** | 10 | 10 | Clean linear git history (14 commits): starter commit first (`0de5088`), predictions before results, one commit per fix, only `a.js` and `b.js` modified among starter files (`git diff 0de5088 HEAD --stat`), 0 leftover `// @ts-check`. |
+| **TOTAL** | | **100** | **100** | **File name: `24120184_100.zip`** |
 
 ---
 
-## 2. Detailed Evidence & Criteria Justification
+## 2. Detailed Justification by Criterion
 
-### Criterion 1: Predictions Before Running (10/10)
-- **Commit**: `ea1f514` ("predictions before running")
-- **Details**: Written strictly before starting `server.mjs`. Predicted that Version A would fail Row 2 due to `forEach(async ...)` not awaiting; predicted Version B would fail Row 6 (`hang` mode) and Row 8 (`// @ts-check`) due to `{ timeout: 5000 }` not being a standard Web API option; predicted Version C would pass all rows (`keep`). Predictions completely matched subsequent empirical runs.
+### Criterion 1: Verdicts and evidence (30 / 30 points)
+- **Predictions**: Committed in `ea1f514` before any server execution. Accurately predicted Row 2 failure in A (`forEach` not awaiting), Row 6 & 8 failures in B (`{ timeout: 5000 }` not a valid Web API option), and full pass for C.
+- **Empirical Results**: Committed in `9fae4c2`. All 27 rubric rows (9 rows × 3 versions) plus 3 parallel waterfall checks are documented with exact observations and server log timings (`3003 ms` under `slow`, `30011 ms` / `30016 ms` under `hang`).
+- **Evidence Screenshots**:
+  - `evidence/a-row2.png`: Shows `#stock-value` displaying `0 đ` instead of `12.360.000 đ`.
+  - `evidence/b-row6.png`: Shows request hanging past 30 seconds before 504 gateway timeout.
+  - `evidence/b-row8.png`: Shows red squiggly underline in VS Code under `{ timeout: 5000 }`.
+- **Actionable Sentences**: Each failing version has a specific one-sentence directive citing the row, the evidence, and the constraints to keep.
 
-### Criterion 2: Independent Assistant Review (10/10)
-- **Commit**: `3afee41` ("assistant review, raw answer")
-- **Details**: Preserved verbatim in Vietnamese from an independent Gemini session without any post-editing or smoothing. Successfully diagnosed the core issues in Version A and Version B.
+### Criterion 2: After your fixes, every version passes every row (25 / 25 points)
+- **Version A**: Fixed in commit `332af4a`. Replaced lines 51–53 with `await Promise.all(products.map(p => getStock(p.id)))` and `products.reduce(...)`. Total is `12.360.000 đ`. All 8 stock requests start concurrently at ~190 ms (verified via Network waterfall, no staircase).
+- **Version B**: Fixed in commit `c7c1f61`. Replaced line 16 `{ timeout: 5000 }` with `{ signal: AbortSignal.timeout(5000) }`. Aborts after exactly 5.00 s in `hang` mode (Row 6 PASS); 0 red squiggly underlines under `// @ts-check` (Row 8 PASS).
+- **Version C**: Left untouched baseline (`keep`).
+- **Post-Fix Verification**: All 3 versions verified 10/10 PASS across all 5 test conditions, documented cleanly in `VERDICTS.md` (Commit `5263dbc`).
 
-### Criterion 3: AI Interaction Log (10/10)
-- **Commits**:
-  - `2cc0f80`: `ai-log: assistant review` (Entry 1)
-  - `79b72d7`: `ai-log: fix A` (Entry 2)
-  - `fec14aa`: `ai-log: fix B` (Entry 3)
-- **Details**: Every entry follows the required schema (`Tool & Model`, `Date`, `Request`, `Result`, `Accepted`, `Changed / Rejected`). Includes the exact one-sentence directive from `VERDICTS.md`, confirms that re-running the entire test table produced 0 regressions, and documents concrete rejected items (such as rejecting unneeded code refactoring and correcting corrupted markdown formatting).
+### Criterion 3: The assistant's review, checked (15 / 15 points)
+- **Raw Answer**: Verbatim Vietnamese response from Gemini 3.8 Flash High committed in `3afee41` without edits or summaries.
+- **Table 1 (Claims vs Runs)**: Checks all assistant claims against empirical test rows. Confirms the two main flaws in A and B; points out inexact line numbers cited by the assistant (lines 48–52 vs 50–56 in A, line 13 vs 16 in B); and disproves the assistant's claim regarding DOM cleanup in B under standard `error` mode.
+- **Table 2 (Failing Rows Missed)**: Identifies that the assistant's reading missed Row 8 (`// @ts-check`), which was caught by running VS Code with `jsconfig.json` (evidence: `evidence/b-row8.png`).
 
-### Criterion 4: Empirical Test Results Before Fixes (20/20)
-- **Commit**: `9fae4c2` ("results before fixes")
-- **Details**: Documented all 27 rubric rows plus 3 parallel verification checks. Recorded exact server log response times (e.g., `3003 ms` under `slow`, `30011 ms` / `30016 ms` under `hang`).
-- **Screenshots**:
-  - `evidence/a-row2.png`: Shows `#stock-value` as `0 đ` under `normal` mode.
-  - `evidence/b-row6.png`: Shows `/api/products` hanging past 30 seconds before receiving HTTP 504.
-  - `evidence/b-row8.png`: Shows red squiggly error in VS Code under `{ timeout: 5000 }`.
+### Criterion 4: CSR vs SSR (10 / 10 points)
+- **Observations**: `CSR-SSR.md` (Commit `56cfcad`) thoroughly answers all 5 questions from `README.md`.
+- **Security & Escaping**: Compares server-side `escapeHtml()` in `server.mjs` (lines 67–71) with browser `textContent`, explaining how both treat data as plain text to prevent XSS and prevent `<i>limited</i>` from rendering as italics.
+- **Metrics**: Contrasts ~13–14 requests for CSR against 2 requests for SSR, explaining First Contentful Paint advantages for slow devices.
+- **Rule of Thumb**: Concludes with strictly one sentence defining when to use SSR vs CSR.
 
-### Criterion 5: Minimal & Correct Fixes for A and B (20/20)
-- **Commit `332af4a` ("fix A: wait for all stock requests before writing the total")**:
-  - Touched only lines 51–53 in `public/versions/a.js`.
-  - Replaced un-awaited `forEach` with `await Promise.all(products.map(...))` and `products.reduce(...)`.
-  - Maintained parallel stock fetching (~190 ms start timestamp, no waterfall staircase). Row 2 now displays `12.360.000 đ`.
-- **Commit `c7c1f61` ("fix B: real 5 s timeout with AbortSignal")**:
-  - Touched strictly 1 line (`public/versions/b.js | 2 +-`): replaced `{ timeout: 5000 }` with `{ signal: AbortSignal.timeout(5000) }`.
-  - Fixes Row 6 (aborts at exactly 5.00 s in `hang` mode) and Row 8 (0 red squiggly underlines under `// @ts-check`).
-- **Version C**: Left 100% untouched (`keep`).
-- **Results after fixes**: All 3 versions verified 10/10 PASS in `VERDICTS.md` (Commits `f397868`, `5263dbc`).
+### Criterion 5: AI-LOG.md (10 / 10 points)
+- **Log Structure**: Commits `2cc0f80`, `79b72d7`, and `fec14aa`. Contains 3 entries corresponding to each assistant engagement (Review, Fix A, Fix B).
+- **Honest Records**: Each entry details the prompt, the code proposed, verification that re-running the full table broke no other rows, and specific items in `Changed / Rejected` (including rejecting scope creep outside lines 51–53 in A and rejecting corrupted markdown drafts).
 
-### Criterion 6: CSR vs SSR Comparative Analysis (15/15)
-- **Commit**: `56cfcad` ("CSR vs SSR answers")
-- **Details**: `CSR-SSR.md` provides in-depth answers to all 5 observation questions from `README.md`. Includes code citations (`escapeHtml` in `server.mjs`), network metrics (13–14 requests for CSR vs 2 for SSR), JavaScript degradation behavior, and a single-sentence architectural rule of thumb.
-
-### Criterion 7: Verification Tables in Assistant Review (10/10)
-- **File**: `ASSISTANT-REVIEW.md`
-- **Details**:
-  - Table 1 cross-examines all claims made by the assistant against empirical test runs, distinguishing True claims from Inexact line citations and edge cases.
-  - Table 2 explicitly identifies that the assistant missed Row 8 (`// @ts-check`) for Version B, citing `evidence/b-row8.png`.
-
-### Criterion 8: Git Hygiene & Packaging (5/5)
-- **Details**: Clean git log, atomic commits for every milestone, no merge commits, working tree clean. No temporary files or leftover `// @ts-check` comments in production version scripts. Deliverable packaged into `<StudentID>_100.zip` containing the full `.git/` history.
+### Criterion 6: Scope and commit history (10 / 10 points)
+- **History**: Linear 14-commit history starting with untouched starter (`0de5088`).
+- **Scope**: `git diff 0de5088 HEAD --stat` confirms only `public/versions/a.js` (7 lines) and `public/versions/b.js` (2 lines) were touched among starter code. All other starter files (`server.mjs`, `panel.js`, `index.html`, `style.css`, `c.js`, `jsconfig.json`) remain identical to starter.
+- **Code Cleanliness**: 0 occurrences of `// @ts-check` left in `public/versions/*.js`.
 
 ---
 
-## 3. Conclusion
+## 3. What I Did Not Manage
 
-All requirements and constraints of the assignment brief, `README.md`, and guidance document have been rigorously satisfied. The final submission achieves a verified score of **100 / 100**.
+1. **Hover Tooltip in `evidence/b-row8.png`**:
+   The screenshot in `evidence/b-row8.png` captures the red squiggly underline beneath `{ timeout: 5000 }` in VS Code at line 17, but the screenshot was captured without the hovering mouse tooltip popup. The exact TypeScript compiler error string (`Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'`) was verified in VS Code and transcribed into `VERDICTS.md` and `ASSISTANT-REVIEW.md`, but is not visually displayed in a popup box within the PNG file itself.
+2. **Assistant Line Discrepancies**:
+   In `ASSISTANT-REVIEW.md`, the assistant's initial review cited slightly shifted line numbers (citing lines 48–52 instead of lines 50–56 in `a.js`, and line 13 instead of line 16 in `b.js`). Rather than altering or smoothing the assistant's raw review text, I preserved the assistant's raw text verbatim as required by the rubric and documented the exact line discrepancies in Table 1 of the verification section.
