@@ -82,3 +82,25 @@
 - **Changed / Rejected**:
   - Rejected any changes to `public/versions/c.js`, helper functions, or DOM event listeners in `b.js`.
   - Rejected the commit message placeholder string previously used in documentation headers, enforcing the exact short SHA `c7c1f61` in the final verdict records.
+## Addendum — Supplementary Runs and Corrections (31 October 2026)
+
+- **Tool & Model**: Muse (assistant in this chat session). The browser runs below were performed by the student in Chrome DevTools against the starter code on a separate worktree (`../orig`, commit `0de5088`, server on port 5051).
+- **Date**: 2026-10-31
+- **Note**: This addendum was written as a supplement after the work it describes, not while it happened. It is dated today and is not backdated.
+- **Request**:
+  Re-check three review claims that Table 1 in `ASSISTANT-REVIEW.md` had judged by reasoning only, retake `evidence/b-row8.png` with the hover tooltip visible, and count the CSR/SSR network requests exactly instead of estimating them.
+- **Result**:
+  - **Version A, unhandled rejections on stock failure: confirmed.** With all `/api/stock/...` requests blocked in DevTools, the Console shows 8 × `Uncaught (in promise) TypeError: Failed to fetch` from `a.js:20` (`getStock`) via `a.js:53` (`Array.forEach`), and `#stock-value` stays `0 đ` (`evidence/a-stockfail.png`).
+  - **Version B, catch does not clear cards on stock failure: confirmed.** With stock blocked, all 8 cards stay visible while the page shows `Could not load products.` and the Retry button (`evidence/b-stockfail.png`).
+  - **Version B, "Retry never appears" under hang: refuted as stated.** After 30 seconds the server returns 504, `fetch` rejects, and the `catch` shows the error and the Retry button (`evidence/b-row6.png`, 504 after 30.02 s).
+  - **`evidence/b-row8.png` retaken**: hover tooltip reads `Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'. ts(2353)`, Problems panel lists 1 problem at `[Ln 17, Col 5]`.
+  - **Request counts counted, not estimated**: `/?v=c` makes **15** requests (document, `style.css`, `panel.js`, `/__mode`, `c.js`, `/api/products`, 8 stock requests, `favicon.ico` 404; **14** excluding the automatic favicon request), `/ssr` makes **3** requests (document, `style.css`, `favicon.ico` 404; **2** excluding favicon) — `evidence/csr-requests.png`, `evidence/ssr-requests.png`.
+- **Accepted**:
+  - The three extra runs and their screenshots are recorded in the `ASSISTANT-REVIEW.md` addendum and referenced from `CSR-SSR.md`.
+- **Changed / Rejected**:
+  - **Corrected Table 1**: the Version B catch claim changes from **False / Inexact** to **True** — the original verdict was wrong, because its reasoning only covered the rubric's `error` condition (products returning 500 before any card is appended) and a stock-only failure had never been run. Caught by `evidence/b-stockfail.png`.
+  - **Corrected Table 1**: the Version A unhandled-rejection claim changes from **True (Theoretical)** to **True (confirmed by run)**. Caught by `evidence/a-stockfail.png`.
+  - **Rejected the review's claim that under `hang` mode Retry never appears** as Inexact: Retry does appear, after 30 seconds, when the server returns 504. Caught by `evidence/b-row6.png` (Row 6).
+  - **Rejected the earlier statement in `SELF_ASSESSMENT_REPORT.md` that every claim had been checked against a row/run**: the Table 1 verdict on the Version B catch claim had been checked by reading code only, not by a run.
+  - **Rejected the assistant's earlier corrupted draft of the `## Results after fixes` section in `VERDICTS.md`** (missing `- Row N:` prefixes such as `2: PASS`, `4: PASS`, `7: PASS`; text cut mid-word such as `8ar. cards.`, `0 problems.ors.`, `0 đ.s.`; C-section lines such as `4:Row 3: PASS.`; garbled text such as `0 errors uer `@`@ts-check`); the section was rewritten cleanly in commit `5263dbc`.
+  - **Process note (honest weakness)**: Entries 2 and 3 above, and this addendum, were written after the work they describe rather than while it happened. The entries are accurate about what was done and when, but they were not contemporaneous logs.
