@@ -116,3 +116,22 @@ const response = await fetch('/api/products', { timeout: 5000 });
 | Failing Row Missed | Target Version | What the Assistant Missed | Empirical Evidence |
 |---|---|---|---|
 | **Row 8: TypeScript Check (`// @ts-check`)** | Version B (`b.js`) | The assistant analyzed logical execution and Web API behavior by reading, but completely missed checking the file with VS Code's TypeScript compiler (`// @ts-check` combined with `jsconfig.json`). TypeScript immediately flags line 16 with a red squiggly error because `timeout` is not a property of `RequestInit`. | Red squiggly underline under `{ timeout: 5000 }` at line 16 of `b.js`: `Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'` (captured in `evidence/b-row8.png` and recorded in `VERDICTS.md` Row 8). |
+## Addendum — Extra Runs (31 October 2026)
+
+Table 1 above judged two claims by reasoning only, not by a run, and it never checked one further claim from the raw review. On 31 October 2026 I ran extra checks against the original (starter) versions on a separate worktree (`git worktree add ../orig 0de5088`, server on port 5051), blocking all stock requests in Chrome DevTools (Request conditions, URLPattern `http://localhost:5051/api/stock/*`, verified in the Network tab: all 8 `/api/stock/...` requests show `(blocked:devtools)` while `GET /api/products` still returns 200). Table 1 itself is left unchanged below so that the corrections here stay visible; this addendum corrects it.
+
+### Table 3: Extra Claims Checked on 31 October 2026
+
+| Assistant Claim | Result | Evidence |
+|---|---|---|
+| **Version A:** Unhandled promise rejections occur if stock requests fail inside `forEach`. | **True — confirmed by run** (Table 1 said "True (Theoretical)" only) | `evidence/a-stockfail.png`: with stock blocked, the Console shows 8 × `Uncaught (in promise) TypeError: Failed to fetch` from `a.js:20` (`getStock`) via `a.js:53` (`Array.forEach`), and `#stock-value` stays `0 đ`. |
+| **Version B:** Catch block fails to clean up DOM cards if stock requests fail after cards are mounted. | **True — CORRECTION. Table 1 marked this "False / Inexact", which was wrong.** The Table 1 reasoning only covered the rubric's `error` condition, where `/api/products` itself returns 500 before any card is appended. A stock-only failure was never run in Step 8. | `evidence/b-stockfail.png`: with stock blocked, all 8 cards stay visible while the page shows `Could not load products.` and the Retry button, and `#stock-value` stays `—`. The `catch` in `b.js` sets the status and shows Retry but never clears `#catalogue`. |
+| **Version B:** Under `hang` mode the page hangs forever and the Retry button never appears. | **Inexact.** The raw review (Version B, hang paragraph) states `#status` is stuck at `Loading products…` forever and Retry never appears. In fact the server answers 504 after 30 seconds, `fetch` then rejects, and the `catch` shows the error and the Retry button — just 25 seconds too late. | `evidence/b-row6.png`: `504` after 30.02 s, `Could not load products.` and the Retry button visible. Table 1 never checked this claim at all. |
+
+### Note on the Review's Verdicts
+
+The assistant's verdicts were two-headed — A `reject (or fix)`, B `fix (or reject)` — so the review never commits to a single verdict per version. That indecisiveness is a weakness of the review itself, and it is why my own verdicts in `VERDICTS.md` (A fix, B fix, C keep) were decided from the runs, not taken from the review.
+
+### Note on `b-row8.png`
+
+The original `evidence/b-row8.png` showed the red squiggly underline but no hover tooltip. It was retaken on 31 October 2026 in VS Code on the starter `b.js` with `// @ts-check` as line 1: the tooltip reads `Object literal may only specify known properties, and 'timeout' does not exist in type 'RequestInit'. ts(2353)`, and the Problems panel lists exactly 1 problem at `[Ln 17, Col 5]`. The new screenshot overwrites `evidence/b-row8.png`; the `// @ts-check` line was removed afterwards and no change was saved.
